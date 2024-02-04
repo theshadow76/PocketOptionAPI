@@ -14,24 +14,29 @@ class PocketOptionApi:
         self.token = token
         self.client = WebSocketClient(self.ws_url)
     def connect(self, msg):
-        self.websocket_client = WebSocketClient(self.ws_url)
+        try:
+            self.websocket_client = WebSocketClient(self.ws_url)
 
-        self.websocket_thread = threading.Thread(target=self.websocket_client.ws.run_forever, kwargs={
-            'sslopt': {
-                "check_hostname": False,
-                "cert_reqs": ssl.CERT_NONE,
-                "ca_certs": "cacert.pem"
-            },
-            "ping_interval": 0,
-            'skip_utf8_validation': True,
-            "origin": "https://pocketoption.com",
-            # "http_proxy_host": '127.0.0.1', "http_proxy_port": 8890
-        })
+            self.websocket_thread = threading.Thread(target=self.websocket_client.ws.run_forever, kwargs={
+                'sslopt': {
+                    "check_hostname": False,
+                    "cert_reqs": ssl.CERT_NONE,
+                    "ca_certs": "cacert.pem"
+                },
+                "ping_interval": 0,
+                'skip_utf8_validation': True,
+                "origin": "https://pocketoption.com",
+                # "http_proxy_host": '127.0.0.1', "http_proxy_port": 8890
+            })
 
-        self.websocket_thread.daemon = True
-        self.websocket_thread.start()
+            self.websocket_thread.daemon = True
+            self.websocket_thread.start()
 
-        self.send_websocket_request(msg=msg)
+            self.send_websocket_request(msg=msg)
+        except Exception as e:
+            print(f"Going for exception.... error: {e}")
+            self.websocket_client.reconnect()
+            self.send_websocket_request(msg=msg)
     def send_websocket_request(self, msg):
         """Send websocket request to PocketOption server.
         :param dict msg: The websocket request msg.
