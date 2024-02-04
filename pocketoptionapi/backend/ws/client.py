@@ -3,7 +3,6 @@ import websocket
 class WebSocketClient:
     def __init__(self, url):
         self.url = url
-        websocket.enableTrace(True)
         self.ws = websocket.WebSocketApp(self.url,
                                          on_open=self.on_open,
                                          on_message=self.on_message,
