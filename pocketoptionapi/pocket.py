@@ -19,6 +19,8 @@ class PocketOptionApi:
         self.logger.setLevel(logging.INFO)
         formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
 
+        self.websocket_client = WebSocketClient(self.ws_url, pocket_api_instance=self)
+
         # Create file handler and add it to the logger
         file_handler = logging.FileHandler('pocket.log')
         file_handler.setFormatter(formatter)
@@ -29,6 +31,8 @@ class PocketOptionApi:
         self.ping_thread = threading.Thread(target=self.auto_ping)  # Create a new thread for auto_ping
         self.ping_thread.daemon = True  # Set the thread as a daemon so it will terminate when the main program terminates
         self.ping_thread.start()  # Start the auto_ping thread
+
+        self.websocket_client.ws.run_forever()
     def auto_ping(self):
         self.logger.info("Starting auto ping thread")
 
@@ -53,7 +57,7 @@ class PocketOptionApi:
                 self.logger.error(f"An error occurred while sending ping or attempting to reconnect: {e}")
                 try:
                     self.logger.warning("Trying again...")
-                    v1 = self.connect()
+                    v1 = self.connect("3")
                     if v1:
                         self.logger.info("Conection completed!, sending ping...")
                         self.ping()
@@ -67,8 +71,6 @@ class PocketOptionApi:
     def connect(self, msg):
         self.logger.info("Attempting to connect...")
         try:
-            self.websocket_client = WebSocketClient(self.ws_url, pocket_api_instance=self)
-
             self.websocket_thread = threading.Thread(target=self.websocket_client.ws.run_forever, kwargs={
                 'sslopt': {
                     "check_hostname": False,
@@ -84,11 +86,7 @@ class PocketOptionApi:
             self.websocket_thread.daemon = True
             self.websocket_thread.start()
 
-            self.websocket_client.ws.keep_running = True
-            self.websocket_client.ws.run_forever
-
             self.send_websocket_request(msg=msg)
-            self.websocket_client.reconnect()
             self.logger.info("Connection successful.")
         except Exception as e:
             print(f"Going for exception.... error: {e}")
