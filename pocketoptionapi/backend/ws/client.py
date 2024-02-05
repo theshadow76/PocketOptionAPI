@@ -1,4 +1,4 @@
-import urllib3
+import urllib
 import websocket
 from pocketoptionapi.constants import REGION
 import threading
@@ -65,9 +65,9 @@ class WebSocketClient:
         print(message)
         self.logger.info(f"Recieved a message!: {message}")
 
-        if str(message).startswith("0"):
+        if '"pingInterval":25000,"pingTimeout":20000,"maxPayload":1000000' in message:
             # self.api.send_websocket_request(msg="40")
-            self.ws.send("40")
+            ws.send(b'40')
 
     def on_error(self, ws, error):
         print(error)
