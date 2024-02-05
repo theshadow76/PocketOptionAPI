@@ -1,3 +1,4 @@
+import urllib3
 import websocket
 from pocketoptionapi.constants import REGION
 import threading
@@ -63,6 +64,10 @@ class WebSocketClient:
     def on_message(self, ws, message):
         print(message)
         self.logger.info(f"Recieved a message!: {message}")
+
+        if str(message).startswith("0"):
+            # self.api.send_websocket_request(msg="40")
+            self.ws.send("40")
 
     def on_error(self, ws, error):
         print(error)

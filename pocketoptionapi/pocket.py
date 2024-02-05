@@ -57,7 +57,7 @@ class PocketOptionApi:
                 self.logger.error(f"An error occurred while sending ping or attempting to reconnect: {e}")
                 try:
                     self.logger.warning("Trying again...")
-                    v1 = self.connect("3")
+                    v1 = self.connect()
                     if v1:
                         self.logger.info("Conection completed!, sending ping...")
                         self.ping()
@@ -86,14 +86,15 @@ class PocketOptionApi:
             self.websocket_thread.daemon = True
             self.websocket_thread.start()
 
-            self.send_websocket_request(msg="40")
             self.logger.info("Connection successful.")
+
+            pause.seconds(5)
+            self.send_websocket_request(msg="40")
         except Exception as e:
             print(f"Going for exception.... error: {e}")
             self.logger.error(f"Connection failed with exception: {e}")
 
             self.websocket_client.reconnect()
-            self.send_websocket_request(msg="40")
     def send_websocket_request(self, msg):
         """Send websocket request to PocketOption server.
         :param dict msg: The websocket request msg.
