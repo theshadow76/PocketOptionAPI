@@ -68,7 +68,7 @@ class PocketOptionApi:
 
             pause.seconds(5)  # Assuming that you've imported 'pause'
 
-    def connect(self, msg):
+    def connect(self):
         self.logger.info("Attempting to connect...")
         try:
             self.websocket_thread = threading.Thread(target=self.websocket_client.ws.run_forever, kwargs={
@@ -86,14 +86,14 @@ class PocketOptionApi:
             self.websocket_thread.daemon = True
             self.websocket_thread.start()
 
-            self.send_websocket_request(msg=msg)
+            self.send_websocket_request(msg="40")
             self.logger.info("Connection successful.")
         except Exception as e:
             print(f"Going for exception.... error: {e}")
             self.logger.error(f"Connection failed with exception: {e}")
 
             self.websocket_client.reconnect()
-            self.send_websocket_request(msg=msg)
+            self.send_websocket_request(msg="40")
     def send_websocket_request(self, msg):
         """Send websocket request to PocketOption server.
         :param dict msg: The websocket request msg.
