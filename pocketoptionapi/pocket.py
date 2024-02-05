@@ -122,6 +122,9 @@ class PocketOptionApi:
             except Exception as e:
                 self.logger.warning(f"Was not able to reconnect: {e}")
                 pause.seconds(5)
+    
+    def login(self, init_msg):
+        self.send_websocket_request(msg=init_msg)
 
     @property
     def ping(self):
