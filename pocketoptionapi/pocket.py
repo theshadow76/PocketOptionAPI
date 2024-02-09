@@ -124,7 +124,10 @@ class PocketOptionApi:
                 pause.seconds(5)
     
     def login(self, init_msg):
+        self.logger.info("Trying to login...")
         self.send_websocket_request(msg=init_msg)
+        # make sure it loged you in
+        pause.seconds(5)
 
     @property
     def ping(self):
