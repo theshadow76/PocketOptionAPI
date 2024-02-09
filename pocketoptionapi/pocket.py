@@ -131,9 +131,25 @@ class PocketOptionApi:
     
     def login(self, init_msg):
         self.logger.info("Trying to login...")
+
+        self.websocket_thread = threading.Thread(target=self.websocket_client.ws.run_forever, kwargs={
+                'sslopt': {
+                    "check_hostname": False,
+                    "cert_reqs": ssl.CERT_NONE,
+                    "ca_certs": "cacert.pem"
+                },
+                "ping_interval": 0,
+                'skip_utf8_validation': True,
+                "origin": "https://pocketoption.com",
+                # "http_proxy_host": '127.0.0.1', "http_proxy_port": 8890
+            })
+
+        self.websocket_thread.daemon = True
+        self.websocket_thread.start()
+
+        self.logger.info("Login thread initialised successfully!")
+
         self.send_websocket_request(msg=init_msg)
-        # make sure it loged you in
-        pause.seconds(5)
         # make sure it is still conetected:
         self.websocket_client.reconnect()
 
