@@ -91,6 +91,10 @@ class PocketOptionApi:
 
             self.logger.info("Connection successful.")
 
+            self.send_websocket_request(msg="40")
+            time.sleep(3)
+            self._login(init_msg=self.init_msg)
+
             pause.seconds(5)
             try:
                 self.send_websocket_request(msg="40")
