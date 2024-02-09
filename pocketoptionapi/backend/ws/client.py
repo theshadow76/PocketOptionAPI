@@ -86,6 +86,7 @@ class WebSocketClient:
         self.logger.info("Opened!")
         if self.pocket_api_instance:
             self.pocket_api_instance.connected_event.set()
+        self.ws.run_forever() # test
 
     def run(self):
         self.ws.run_forever()  # Use dispatcher for automatic reconnection

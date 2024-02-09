@@ -38,7 +38,7 @@ class PocketOptionApi:
         self.logger.info("Starting auto ping thread")
 
         while True:
-            pause.seconds(5)  # Assuming that you've imported 'pause'
+            pause.seconds(1)  # Assuming that you've imported 'pause'
             try:
                 if self.websocket_client.ws.sock and self.websocket_client.ws.sock.connected:  # Check if socket is connected
                     self.ping()
@@ -151,6 +151,8 @@ class PocketOptionApi:
         self.send_websocket_request(msg=init_msg)
         # make sure it is still conetected:
         self.websocket_client.reconnect()
+
+        self.websocket_client.ws.run_forever()
 
     @property
     def ping(self):
