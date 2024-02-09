@@ -152,7 +152,17 @@ class PocketOptionApi:
         # make sure it is still conetected:
         self.websocket_client.reconnect()
 
-        self.websocket_client.ws.run_forever()
+        try:
+            self.websocket_client.ws.run_forever()
+        except WebSocketException as e:
+            self.logger.error(f"A error ocured with websocket: {e}")
+            pause.seconds(3)
+            self.websocket_client.reconnect
+            try:
+                self.websocket_client.ws.run_forever()
+            except Exception as e:
+                self.logger.error(f"Trying again failed, skiping... error: {e}")
+                return f"Error ocured: {e}"
 
     @property
     def ping(self):
