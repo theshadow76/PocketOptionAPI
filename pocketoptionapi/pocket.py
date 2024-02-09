@@ -8,6 +8,7 @@ import json
 import urllib
 import websocket
 import logging
+from websocket._exceptions import WebSocketException
 
 class PocketOptionApi:
     def __init__(self, token) -> None:
@@ -89,7 +90,12 @@ class PocketOptionApi:
             self.logger.info("Connection successful.")
 
             pause.seconds(5)
-            self.send_websocket_request(msg="40")
+            try:
+                self.send_websocket_request(msg="40")
+            except WebSocketException as e:
+                self.logger.error(f"A error ocured with weboscket... Error: {e}")
+                pause.seconds(5)
+                self.send_websocket_request(msg="40")
         except Exception as e:
             print(f"Going for exception.... error: {e}")
             self.logger.error(f"Connection failed with exception: {e}")
@@ -128,6 +134,8 @@ class PocketOptionApi:
         self.send_websocket_request(msg=init_msg)
         # make sure it loged you in
         pause.seconds(5)
+        # make sure it is still conetected:
+        self.websocket_client.reconnect()
 
     @property
     def ping(self):
