@@ -12,13 +12,14 @@ import time
 from websocket._exceptions import WebSocketException
 
 class PocketOptionApi:
-    def __init__(self, token) -> None:
+    def __init__(self, init_msg) -> None:
         self.ws_url = "wss://api-fin.po.market/socket.io/?EIO=4&transport=websocket"
-        self.token = token
+        self.token = "TEST_TOKEN"
         self.connected_event = threading.Event()
         self.client = WebSocketClient(self.ws_url)
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging.INFO)
+        self.init_msg = init_msg
         formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
 
         self.websocket_client = WebSocketClient(self.ws_url, pocket_api_instance=self)
@@ -28,7 +29,7 @@ class PocketOptionApi:
         file_handler.setFormatter(formatter)
         self.logger.addHandler(file_handler)
 
-        self.logger.info(f"initialiting Pocket API with token: {token}")
+        self.logger.info(f"initialiting Pocket API with token: {self.token}")
 
         self.ping_thread = threading.Thread(target=self.auto_ping)  # Create a new thread for auto_ping
         self.ping_thread.daemon = True  # Set the thread as a daemon so it will terminate when the main program terminates
@@ -93,10 +94,13 @@ class PocketOptionApi:
             pause.seconds(5)
             try:
                 self.send_websocket_request(msg="40")
+                time.sleep(3)
+                self._login(init_msg=self.init_msg)
             except WebSocketException as e:
                 self.logger.error(f"A error ocured with weboscket... Error: {e}")
                 pause.seconds(5)
                 self.send_websocket_request(msg="40")
+                self._login(init_msg=self.init_msg)
         except Exception as e:
             print(f"Going for exception.... error: {e}")
             self.logger.error(f"Connection failed with exception: {e}")
@@ -129,7 +133,7 @@ class PocketOptionApi:
                 self.logger.warning(f"Was not able to reconnect: {e}")
                 pause.seconds(5)
     
-    def login(self, init_msg):
+    def _login(self, init_msg):
         self.logger.info("Trying to login...")
 
         self.websocket_thread = threading.Thread(target=self.websocket_client.ws.run_forever, kwargs={
@@ -165,6 +169,7 @@ class PocketOptionApi:
                 self.send_websocket_request(msg=init_msg)
             except Exception as e:
                 self.logger.error(f"Trying again failed, skiping... error: {e}")
+                time.sleep(5)
                 self.send_websocket_request(msg=init_msg)
                 time.sleep(10)
 
