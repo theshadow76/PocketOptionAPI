@@ -70,6 +70,9 @@ class WebSocketClient:
             # self.api.send_websocket_request(msg="40")
             self.logger.info("Wup Wup, we are sending the 40 request!")
             ws.send(b'40')
+        if data == '2':
+            self.logger.info("Sending the 3 request!")
+            ws.send(b'3')
 
     def on_error(self, ws, error):
         print(error)
@@ -86,6 +89,7 @@ class WebSocketClient:
         self.logger.info("Opened!")
         if self.pocket_api_instance:
             self.pocket_api_instance.connected_event.set()
+        self.ws.run_forever() # test
 
     def run(self):
         self.ws.run_forever()  # Use dispatcher for automatic reconnection
