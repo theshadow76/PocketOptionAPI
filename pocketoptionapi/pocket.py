@@ -8,6 +8,7 @@ import json
 import urllib
 import websocket
 import logging
+import time
 from websocket._exceptions import WebSocketException
 
 class PocketOptionApi:
@@ -149,8 +150,8 @@ class PocketOptionApi:
         self.logger.info("Login thread initialised successfully!")
 
         self.send_websocket_request(msg=init_msg)
-        # make sure it is still conetected:
-        self.websocket_client.reconnect()
+
+        time.sleep(3)
 
         try:
             self.websocket_client.ws.run_forever()
@@ -158,11 +159,14 @@ class PocketOptionApi:
             self.logger.error(f"A error ocured with websocket: {e}")
             pause.seconds(3)
             self.websocket_client.reconnect
+            self.send_websocket_request(msg=init_msg)
             try:
                 self.websocket_client.ws.run_forever()
+                self.send_websocket_request(msg=init_msg)
             except Exception as e:
                 self.logger.error(f"Trying again failed, skiping... error: {e}")
-                return f"Error ocured: {e}"
+                self.send_websocket_request(msg=init_msg)
+                time.sleep(10)
 
     @property
     def ping(self):
