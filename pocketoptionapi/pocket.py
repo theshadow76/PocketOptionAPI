@@ -116,7 +116,6 @@ class PocketOptionApi:
         try:
             self.logger.info("Request sent successfully.")
             self.websocket_client.ws.send(bytearray(urllib.parse.quote(data).encode('utf-8')), opcode=websocket.ABNF.OPCODE_BINARY)
-            pause.seconds(5)
             return True
         except Exception as e:
             self.logger.error(f"Failed to send request with exception: {e}")
