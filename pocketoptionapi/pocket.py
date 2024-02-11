@@ -159,6 +159,8 @@ class PocketOptionApi:
         # self.send_websocket_request(msg=init_msg)
         self.websocket_client.ws.send(init_msg)
 
+        self.logger.info(f"Message was sent successfully to log you in!, mesage: {init_msg}")
+
         time.sleep(3)
 
         try:
