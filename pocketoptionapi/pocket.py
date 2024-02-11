@@ -99,6 +99,8 @@ class PocketOptionApi:
             try:
                 self.send_websocket_request(msg="40")
                 time.sleep(3)
+                self.send_websocket_request(msg=self.init_msg)
+                pause.seconds(10)
                 self._login(init_msg=self.init_msg)
             except WebSocketException as e:
                 self.logger.error(f"A error ocured with weboscket... Error: {e}")
@@ -108,8 +110,6 @@ class PocketOptionApi:
         except Exception as e:
             print(f"Going for exception.... error: {e}")
             self.logger.error(f"Connection failed with exception: {e}")
-
-            self.websocket_client.reconnect()
     def send_websocket_request(self, msg):
         """Send websocket request to PocketOption server.
         :param dict msg: The websocket request msg.
@@ -130,7 +130,6 @@ class PocketOptionApi:
             self.logger.error(f"Failed to send request with exception: {e}")
             # Consider adding any necessary exception handling code here
             try:
-                self.websocket_client.reconnect()
                 self.websocket_client.ws.send(bytearray(urllib.parse.quote(data).encode('utf-8')), opcode=websocket.ABNF.OPCODE_BINARY)
                 pause.seconds(5)
             except Exception as e:
@@ -166,7 +165,6 @@ class PocketOptionApi:
         except WebSocketException as e:
             self.logger.error(f"A error ocured with websocket: {e}")
             pause.seconds(3)
-            self.websocket_client.reconnect
             self.send_websocket_request(msg=init_msg)
             try:
                 self.websocket_client.ws.run_forever()
