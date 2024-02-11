@@ -99,7 +99,7 @@ class PocketOptionApi:
             try:
                 self.send_websocket_request(msg="40")
                 time.sleep(3)
-                self.send_websocket_request(msg=self.init_msg)
+                # self.send_websocket_request(msg=self.init_msg)
                 pause.seconds(10)
                 self._login(init_msg=self.init_msg)
             except WebSocketException as e:
@@ -156,7 +156,8 @@ class PocketOptionApi:
 
         self.logger.info("Login thread initialised successfully!")
 
-        self.send_websocket_request(msg=init_msg)
+        # self.send_websocket_request(msg=init_msg)
+        self.websocket_client.ws.send(init_msg)
 
         time.sleep(3)
 
@@ -165,14 +166,14 @@ class PocketOptionApi:
         except WebSocketException as e:
             self.logger.error(f"A error ocured with websocket: {e}")
             pause.seconds(3)
-            self.send_websocket_request(msg=init_msg)
+            # self.send_websocket_request(msg=init_msg)
             try:
                 self.websocket_client.ws.run_forever()
                 self.send_websocket_request(msg=init_msg)
             except Exception as e:
                 self.logger.error(f"Trying again failed, skiping... error: {e}")
                 time.sleep(5)
-                self.send_websocket_request(msg=init_msg)
+                # self.send_websocket_request(msg=init_msg)
                 time.sleep(10)
 
     @property
