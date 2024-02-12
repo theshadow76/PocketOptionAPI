@@ -1,5 +1,6 @@
 # Made by © Vigo Walker
 from pocketoptionapi.backend.ws.client import WebSocketClient
+from pocketoptionapi.backend.ws.chat import WebSocketClientChat
 import threading
 import ssl
 import decimal
@@ -29,6 +30,11 @@ class PocketOptionApi:
         self.logger.addHandler(file_handler)
 
         self.logger.info(f"initialiting Pocket API with token: {self.token}")
+
+        self.websocket_client_chat = WebSocketClientChat(url="wss://chat-po.site/cabinet-client/socket.io/?EIO=4&transport=websocket")
+        self.websocket_client_chat.run()
+
+        self.logger.info("Send chat websocket")
 
         self.websocket_client.ws.run_forever()
     def auto_ping(self):
@@ -65,6 +71,10 @@ class PocketOptionApi:
 
     def connect(self):
         self.logger.info("Attempting to connect...")
+
+        self.websocket_client_chat.ws.send("40")
+        data = r"""42["user_init",{"id":27658142,"secret":"8ed9be7299c3aa6363e57ae5a4e52b7a"}]"""
+        self.websocket_client_chat.ws.send(data)
         try:
             self.websocket_thread = threading.Thread(target=self.websocket_client.ws.run_forever, kwargs={
                 'sslopt': {
