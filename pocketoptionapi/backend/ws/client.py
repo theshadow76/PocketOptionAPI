@@ -60,15 +60,14 @@ class WebSocketClient:
                 continue  # Try the next region
 
     def on_message(self, ws, message):
-        data = message.decode("utf8")
-        print(data)
-        self.logger.info(f"Recieved a message!: {data}")
+        print(f"Message: {message}")
+        self.logger.info(f"Recieved a message!: {message}")
 
-        if '"pingInterval":25000,"pingTimeout":20000,"maxPayload":1000000' in data:
+        if '"pingInterval":25000,"pingTimeout":20000,"maxPayload":1000000' in message:
             # self.api.send_websocket_request(msg="40")
             self.logger.info("Wup Wup, we are sending the 40 request!")
             ws.send(b'40')
-        if data == '2':
+        if message == '2':
             self.logger.info("Sending the 3 request!")
             ws.send(b'3')
 
