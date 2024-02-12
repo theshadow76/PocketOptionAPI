@@ -7,7 +7,7 @@ class REGION:
         "HONGKONG": "wss://api-hk.po.market/socket.io/?EIO=4&transport=websocket",
         "SERVER1": "wss://api-spb.po.market/socket.io/?EIO=4&transport=websocket",
         "FRANCE2": "wss://api-fr2.po.market/socket.io/?EIO=4&transport=websocket",
-        "UNITED_STATES2": "wss://api-us4.po.market/socket.io/?EIO=4&transport=websocket",
+        "UNITED_STATES4": "wss://api-us4.po.market/socket.io/?EIO=4&transport=websocket",
         "UNITED_STATES3": "wss://api-us3.po.market/socket.io/?EIO=4&transport=websocket",
         "UNITED_STATES2": "wss://api-us2.po.market/socket.io/?EIO=4&transport=websocket",
         "RUSSIA": "wss://api-msk.po.market/socket.io/?EIO=4&transport=websocket",
