@@ -1,3 +1,5 @@
+# Client.py made by © Vigo Walker
+
 import websockets
 import anyio
 from rich.pretty import pprint as print
