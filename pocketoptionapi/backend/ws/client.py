@@ -14,8 +14,8 @@ class WebSocketClient:
                 async with websockets.connect(
                     url,
                     extra_headers={
-                        "Origin": "https://pocket-link19.co",
-                        # "Origin": "https://po.trade/"
+                        # "Origin": "https://pocket-link19.co",
+                        "Origin": "https://po.trade/"
                     },
                 ) as websocket:
                     async for message in websocket:
