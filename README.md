@@ -2,6 +2,8 @@
 
 In development!
 
+for a better understanding, check this [link](https://github.com/theshadow76/PocketOptionAPI/issues/4)
+
 # help me
 
 you can donate here: [paypal](https://paypal.me/shadowtechsc?country.x=CL&locale.x=es_XC)
