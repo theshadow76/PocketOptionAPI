@@ -63,7 +63,7 @@ class WebsocketClient(object):
         regs = self.region.get_regions()
         for i in regs:
             print(f"Reconnecting to {i}...")
-            async with websockets.connect(i, extra_headers={"Origin": "https://m.pocketoption.com "}) as ws:
+            async with websockets.connect(i, extra_headers={"Origin": "https://po.trade/  "}) as ws:
                 print("Conectado a: ", i)
                 self.websocket = ws
                 self.url = i
@@ -86,7 +86,7 @@ class WebsocketClient(object):
             for url in self.region.get_regions(True):
                 print(url)
                 try:
-                    async with websockets.connect(url, extra_headers={"Origin": "https://m.pocketoption.com"}) as ws:
+                    async with websockets.connect(url, extra_headers={"Origin": "https://po.trade/ "}) as ws:
 
                         print("Conectado a: ", url)
                         self.websocket = ws
