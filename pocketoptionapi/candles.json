@@ -1,0 +1,17 @@
+{
+  "asset": "AUDNZD_otc",
+  "index": 171201484810,
+  "data":
+  [
+    {
+      "symbol_id": 70,
+      "time": 1712002800,
+      "open": 1.08567,
+      "close": 1.08553,
+      "high": 1.08586,
+      "low": 1.08475,
+      "asset": "AUDNZD_otc"
+    }
+  ],
+  "period": 60
+}
