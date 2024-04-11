@@ -1,10 +1,12 @@
 import random
 import time
-
+import dotenv
 from pocketoptionapi.stable_api import PocketOption
-
-ssid = (r'')
+import os
+dotenv.load_dotenv()
+ssid = os.getenv("SSID")
 api = PocketOption(ssid)
+print(ssid)
 
 
 def direction():
@@ -15,17 +17,4 @@ def direction():
 if __name__ == "__main__":
     api.connect()
     time.sleep(2)
-
-    print(api.check_connect(), "check connect")
-
-    data_candles = api.get_candles("AUDNZD_otc", 60, time.time(), count_request=1)
-
-    data, diff = api.process_candle(data_candles, 60)
-    print(data)
-    print(diff)
-    data.to_csv('datos_AUDNZD_otc_test.csv', index=False)
-    while api.check_connect():
-        print(api.get_server_timestamp(), "server datetime")
-        time.sleep(1)
-
-    # Cierra la conexión con la API
+    print(f"Get balance: {api.get_balance()}")

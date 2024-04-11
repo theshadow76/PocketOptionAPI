@@ -13,6 +13,6 @@ class Get_Balances(Base):
         data = {"name": "get-balances",
                 "version": "1.0"
                 }
-        print("get_balances in get_balances.py")
+        print(f"sent balance requests | data: {data}")
 
         self.send_websocket_request(self.name, data)

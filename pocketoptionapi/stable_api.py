@@ -16,6 +16,7 @@ from collections import defaultdict
 from collections import deque
 # from pocketoptionapi.expiration import get_expiration_time, get_remaning_time
 import pandas as pd
+from pocketoptionapi.ws.chanels.get_balances import *
 
 # Obtener la zona horaria local del sistema como una cadena en el formato IANA
 local_zone_name = get_localzone()
@@ -115,12 +116,13 @@ class PocketOption:
         # wait for timestamp getting
 
     # self.update_ACTIVES_OPCODE()
-    @staticmethod
-    def get_balance():
-        if global_value.balance_updated:
-            return global_value.balance
-        else:
-            return None
+    def get_balance(self):
+        self.api.get_balances()
+        return {
+            "balance_id" : global_value.balance_id,
+            "balance" : global_value.balance,
+            "balance_type" : global_value.balance_type
+        }
 
     def buy(self, amount, ACTIVES, ACTION, expirations):
         self.api.buy_multi_option = {}
