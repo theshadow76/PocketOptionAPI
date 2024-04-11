@@ -8,13 +8,10 @@ ssid = os.getenv("SSID")
 api = PocketOption(ssid)
 print(ssid)
 
-
 def direction():
     # Selecciona aleatoriamente entre 'call' y 'put'
     return random.choice(['call', 'put'])
 
-
 if __name__ == "__main__":
     api.connect()
     time.sleep(2)
-    print(f"Get balance: {api.get_balance()}")

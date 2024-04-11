@@ -59,6 +59,21 @@ class WebsocketClient(object):
         self.esperar_segundo_mensaje = False
         self.recibido_updateClosedDeals = False
 
+    async def reconnect(self):
+        regs = self.region.get_regions()
+        for i in regs:
+            print(f"Reconnecting to {i}...")
+            async with websockets.connect(i, extra_headers={"Origin": "https://m.pocketoption.com"}) as ws:
+
+                print("Conectado a: ", i)
+                self.websocket = ws
+                self.url = i
+                on_message_task = asyncio.create_task(self.websocket_listener(ws))
+                sender_task = asyncio.create_task(send_pin(ws))
+                message_task = asyncio.create_task(self.send_message(self.message))
+                await asyncio.gather(on_message_task, sender_task, message_task)
+
+
     async def websocket_listener(self, ws):
         async for message in ws:
             await self.on_message(message)
@@ -138,6 +153,15 @@ class WebsocketClient(object):
                 global_value.balance_id = message["uid"]
                 global_value.balance = message["balance"]
                 global_value.balance_type = message["isDemo"]
+
+                data = {
+                    "balance_id" :  message["uid"],
+                    "balance" : message["balance"],
+                    "balance_type" : message["isDemo"]
+                }
+
+                with open("balance.json", "w") as f:
+                    json.dump(data, f)
 
             elif "requestId" in message and message["requestId"] == 'buy':
                 global_value.order_data = message
@@ -220,11 +244,17 @@ class WebsocketClient(object):
         """Method to process websocket errors."""
         logger = logging.getLogger(__name__)
         logger.error(error)
-        global_value.websocket_error_reason = str(error)
-        global_value.check_websocket_if_error = True
+        try:
+            self.reconnect()
+        except:
+            global_value.websocket_error_reason = str(error)
+            global_value.check_websocket_if_error = True
 
     async def on_close(self, error):  # pylint: disable=unused-argument
         """Method to process websocket close."""
         logger = logging.getLogger(__name__)
         logger.debug("Websocket connection closed.")
-        global_value.websocket_is_connected = False
+        try:
+            self.reconnect()
+        except:
+            global_value.websocket_is_connected = False
