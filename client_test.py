@@ -12,7 +12,7 @@ async def websocket_client(url, pro):
         print(f"Trying {i}...")
         try:
             async with websockets.connect(
-                url,
+                i, #teoria de los issues
                 extra_headers={
                     #"Origin": "https://pocket-link19.co",
                     "Origin": "https://po.trade/"
