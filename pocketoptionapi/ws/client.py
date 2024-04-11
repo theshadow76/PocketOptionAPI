@@ -6,7 +6,7 @@ import websockets
 import json
 import logging
 import ssl
-
+import time
 # Suponiendo la existencia de estos módulos basados en tu código original
 import pocketoptionapi.constants as OP_code
 import pocketoptionapi.global_value as global_value
@@ -63,8 +63,7 @@ class WebsocketClient(object):
         regs = self.region.get_regions()
         for i in regs:
             print(f"Reconnecting to {i}...")
-            async with websockets.connect(i, extra_headers={"Origin": "https://m.pocketoption.com"}) as ws:
-
+            async with websockets.connect(i, extra_headers={"Origin": "https://m.pocketoption.com "}) as ws:
                 print("Conectado a: ", i)
                 self.websocket = ws
                 self.url = i
@@ -140,6 +139,7 @@ class WebsocketClient(object):
         # global_value.ssl_Mutual_exclusion = True
         logger = logging.getLogger(__name__)
         logger.debug(message)
+        print(message)
 
         # message = json.loads(str(message))
 
@@ -203,7 +203,8 @@ class WebsocketClient(object):
             await self.websocket.send("3")
 
         elif message.startswith('40{"sid":"'):
-            # print(f"{self.url.split('/')[2]} got 40 sid send session")
+            print(f"{self.url.split('/')[2]} got 40 sid send session")
+            print(f"send: {self.ssid}")
             await self.websocket.send(self.ssid)
 
         elif message.startswith('451-['):
@@ -245,7 +246,7 @@ class WebsocketClient(object):
         logger = logging.getLogger(__name__)
         logger.error(error)
         try:
-            self.reconnect()
+            await self.reconnect()
         except:
             global_value.websocket_error_reason = str(error)
             global_value.check_websocket_if_error = True
@@ -255,6 +256,6 @@ class WebsocketClient(object):
         logger = logging.getLogger(__name__)
         logger.debug("Websocket connection closed.")
         try:
-            self.reconnect()
+            await self.reconnect()
         except:
             global_value.websocket_is_connected = False

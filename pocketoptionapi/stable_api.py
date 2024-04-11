@@ -17,6 +17,7 @@ from collections import deque
 # from pocketoptionapi.expiration import get_expiration_time, get_remaning_time
 import pandas as pd
 from pocketoptionapi.ws.chanels.get_balances import *
+from pocketoptionapi.ws.client import WebsocketClient
 
 # Obtener la zona horaria local del sistema como una cadena en el formato IANA
 local_zone_name = get_localzone()
@@ -103,6 +104,8 @@ class PocketOption:
             return False
         return True
 
+    async def reconect(self):
+        await WebsocketClient(self).reconnect()
     @staticmethod
     def check_connect():
         # True/False
