@@ -2,20 +2,18 @@ import websockets
 import anyio
 from rich.pretty import pprint as print
 import json
-from pocketoptionapi.constants import REGION
 
-SESSION = r'42["auth",{"session":"a:4:{s:10:\"session_id\";s:32:\"a1dc009a7f1f0c8267d940d0a036156f\";s:10:\"ip_address\";s:12:\"190.162.4.33\";s:10:\"user_agent\";s:120:\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 OP\";s:13:\"last_activity\";i:1709914958;}793884e7bccc89ec798c06ef1279fcf2","isDemo":0,"uid":27658142,"platform":1}]'
+SESSION = r'42["auth",{"session":"a:4:{s:10:\"session_id\";s:32:\"c53eec05c6f8a8be2d134d4fd55266f8\";s:10:\"ip_address\";s:14:\"46.138.176.190\";s:10:\"user_agent\";s:101:\"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36\";s:13:\"last_activity\";i:1707850603;}9f383935faff5a86bc1658bbde8c61e7","isDemo":1,"uid":72038016,"platform":3}]'
 
 
 async def websocket_client(url, pro):
-    for i in REGION.get_regions(REGION):
-        print(f"Trying {i}...")
+    while True:
         try:
             async with websockets.connect(
                 url,
                 extra_headers={
-                    #"Origin": "https://pocket-link19.co",
-                    "Origin": "https://po.trade/"
+                    "Origin": "https://pocket-link19.co",
+                    #"Origin": "https://po.trade/"
                 },
             ) as websocket:
                 async for message in websocket:
@@ -25,7 +23,7 @@ async def websocket_client(url, pro):
         except Exception as e:
             print(e)
             print("Connection lost... reconnecting")
-            # await anyio.sleep(5)
+            await anyio.sleep(5)
     return True
 
 
@@ -53,7 +51,6 @@ async def pro(message, websocket, url):
     if message.startswith('40{"sid":"'):
         print(f"{url.split('/')[2]} got 40 sid send session")
         await websocket.send(SESSION)
-        print("message sent! We are logged in!!!")
 
 
 async def main():
