@@ -18,12 +18,14 @@ def main():
 
     max_retries = 5
     for _ in range(max_retries):
+        print(api.get_balance())
         time.sleep(5)
         try:
             asyncio.run(api.reconect())
         except:
             pass
         if api.check_connect(): 
+           print(api.get_balance())
            break  # Exit loop if connected
     else:
         print("Failed to connect after max retries")

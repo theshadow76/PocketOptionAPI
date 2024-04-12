@@ -27,11 +27,14 @@ async def on_open():  # pylint: disable=unused-argument
 
 
 async def send_pin(ws):
-    while global_value.websocket_is_connected is False:
+    while not global_value.websocket_is_connected:
         await asyncio.sleep(0.1)
-    pass
+    print("before pass")
+    # pass
+    print("after pass")
     while True:
-        await asyncio.sleep(20)
+        await asyncio.sleep(5)
+        print("sent ping request")
         await ws.send('42["ps"]')
 
 

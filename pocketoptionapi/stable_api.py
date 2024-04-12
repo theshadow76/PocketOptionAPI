@@ -120,12 +120,10 @@ class PocketOption:
 
     # self.update_ACTIVES_OPCODE()
     def get_balance(self):
-        self.api.get_balances()
-        return {
-            "balance_id" : global_value.balance_id,
-            "balance" : global_value.balance,
-            "balance_type" : global_value.balance_type
-        }
+        if global_value.balance_updated:
+            return global_value.balance
+        else:
+            return None
 
     def buy(self, amount, ACTIVES, ACTION, expirations):
         self.api.buy_multi_option = {}
