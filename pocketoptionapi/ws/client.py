@@ -17,7 +17,6 @@ logger = logging.getLogger(__name__)
 
 timesync = TimeSync()
 
-
 async def on_open():  # pylint: disable=unused-argument
     """Method to process websocket open."""
     print("CONECTADO CON EXITO")
