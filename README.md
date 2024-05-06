@@ -1,3 +1,7 @@
+# talk with us
+https://discord.com/invite/rZyaxYnd
+
+
 # Pocket Option API
 
 In development!
