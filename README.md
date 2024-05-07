@@ -1,5 +1,6 @@
 # talk with us
-https://discord.com/invite/rZyaxYnd
+https://discord.gg/du4GaQGHMT
+
 
 
 # Pocket Option API
