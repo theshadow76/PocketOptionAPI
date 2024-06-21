@@ -10,40 +10,40 @@ import ssl
 import atexit
 from collections import deque
 from pocketoptionapi.ws.client import WebsocketClient
-from pocketoptionapi.ws.chanels.get_balances import *
+from pocketoptionapi.ws.channels.get_balances import *
 
-from pocketoptionapi.ws.chanels.ssid import Ssid
-# from pocketoptionapi.ws.chanels.subscribe import *
-# from pocketoptionapi.ws.chanels.unsubscribe import *
-# from pocketoptionapi.ws.chanels.setactives import SetActives
-from pocketoptionapi.ws.chanels.candles import GetCandles
-# from pocketoptionapi.ws.chanels.buyv2 import Buyv2
-from pocketoptionapi.ws.chanels.buyv3 import *
-# from pocketoptionapi.ws.chanels.user import *
-# from pocketoptionapi.ws.chanels.api_game_betinfo import Game_betinfo
-# from pocketoptionapi.ws.chanels.instruments import Get_instruments
-# from pocketoptionapi.ws.chanels.get_financial_information import GetFinancialInformation
-# from pocketoptionapi.ws.chanels.strike_list import Strike_list
-# from pocketoptionapi.ws.chanels.leaderboard import Leader_Board
+from pocketoptionapi.ws.channels.ssid import Ssid
+# from pocketoptionapi.ws.channels.subscribe import *
+# from pocketoptionapi.ws.channels.unsubscribe import *
+# from pocketoptionapi.ws.channels.setactives import SetActives
+from pocketoptionapi.ws.channels.candles import GetCandles
+# from pocketoptionapi.ws.channels.buyv2 import Buyv2
+from pocketoptionapi.ws.channels.buyv3 import *
+# from pocketoptionapi.ws.channels.user import *
+# from pocketoptionapi.ws.channels.api_game_betinfo import Game_betinfo
+# from pocketoptionapi.ws.channels.instruments import Get_instruments
+# from pocketoptionapi.ws.channels.get_financial_information import GetFinancialInformation
+# from pocketoptionapi.ws.channels.strike_list import Strike_list
+# from pocketoptionapi.ws.channels.leaderboard import Leader_Board
 
-# from pocketoptionapi.ws.chanels.traders_mood import Traders_mood_subscribe
-# from pocketoptionapi.ws.chanels.traders_mood import Traders_mood_unsubscribe
-# from pocketoptionapi.ws.chanels.buy_place_order_temp import Buy_place_order_temp
-# from pocketoptionapi.ws.chanels.get_order import Get_order
-# from pocketoptionapi.ws.chanels.get_deferred_orders import GetDeferredOrders
-# from pocketoptionapi.ws.chanels.get_positions import *
+# from pocketoptionapi.ws.channels.traders_mood import Traders_mood_subscribe
+# from pocketoptionapi.ws.channels.traders_mood import Traders_mood_unsubscribe
+# from pocketoptionapi.ws.channels.buy_place_order_temp import Buy_place_order_temp
+# from pocketoptionapi.ws.channels.get_order import Get_order
+# from pocketoptionapi.ws.channels.get_deferred_orders import GetDeferredOrders
+# from pocketoptionapi.ws.channels.get_positions import *
 
-# from pocketoptionapi.ws.chanels.get_available_leverages import Get_available_leverages
-# from pocketoptionapi.ws.chanels.cancel_order import Cancel_order
-# from pocketoptionapi.ws.chanels.close_position import Close_position
-# from pocketoptionapi.ws.chanels.get_overnight_fee import Get_overnight_fee
-# from pocketoptionapi.ws.chanels.heartbeat import Heartbeat
+# from pocketoptionapi.ws.channels.get_available_leverages import Get_available_leverages
+# from pocketoptionapi.ws.channels.cancel_order import Cancel_order
+# from pocketoptionapi.ws.channels.close_position import Close_position
+# from pocketoptionapi.ws.channels.get_overnight_fee import Get_overnight_fee
+# from pocketoptionapi.ws.channels.heartbeat import Heartbeat
 
-# from pocketoptionapi.ws.chanels.digital_option import *
-# from pocketoptionapi.ws.chanels.api_game_getoptions import *
-# from pocketoptionapi.ws.chanels.sell_option import Sell_Option
-# from pocketoptionapi.ws.chanels.change_tpsl import Change_Tpsl
-# from pocketoptionapi.ws.chanels.change_auto_margin_call import ChangeAutoMarginCall
+# from pocketoptionapi.ws.channels.digital_option import *
+# from pocketoptionapi.ws.channels.api_game_getoptions import *
+# from pocketoptionapi.ws.channels.sell_option import Sell_Option
+# from pocketoptionapi.ws.channels.change_tpsl import Change_Tpsl
+# from pocketoptionapi.ws.channels.change_auto_margin_call import ChangeAutoMarginCall
 
 from pocketoptionapi.ws.objects.timesync import TimeSync
 # from pocketoptionapi.ws.objects.profile import Profile
@@ -51,7 +51,9 @@ from pocketoptionapi.ws.objects.candles import Candles
 # from pocketoptionapi.ws.objects.listinfodata import ListInfoData
 # from pocketoptionapi.ws.objects.betinfo import Game_betinfo_data
 import pocketoptionapi.global_value as global_value
+from pocketoptionapi.ws.channels.change_symbol import ChangeSymbol
 from collections import defaultdict
+from pocketoptionapi.ws.objects.time_sync import TimeSynchronizer
 
 
 def nested_dict(n, type):
@@ -71,7 +73,10 @@ class PocketOptionAPI(object):  # pylint: disable=too-many-instance-attributes
 
     # pylint: disable=too-many-public-methods
     socket_option_opened = {}
-    timesync = TimeSync()
+    time_sync = TimeSync()
+    sync = TimeSynchronizer()
+    timesync = None
+    # pylint: disable=too-many-arguments
     # profile = Profile()
     candles = Candles()
     # listinfodata = ListInfoData()
@@ -132,6 +137,8 @@ class PocketOptionAPI(object):  # pylint: disable=too-many-instance-attributes
     users_availability = None
     history_data = None
     historyNew = None
+    server_timestamp = None
+    sync_datetime = None
 
     # ------------------
 
@@ -177,11 +184,9 @@ class PocketOptionAPI(object):  # pylint: disable=too-many-instance-attributes
         data = f'42{json.dumps(msg)}'
 
         while (global_value.ssl_Mutual_exclusion or global_value.ssl_Mutual_exclusion_write) and no_force_send:
-
             pass
         global_value.ssl_Mutual_exclusion_write = True
 
-        # self.websocket_client.send_message(data)
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
 
@@ -223,27 +228,22 @@ class PocketOptionAPI(object):  # pylint: disable=too-many-instance-attributes
         global_value.ssl_Mutual_exclusion = False
         global_value.ssl_Mutual_exclusion_write = False
 
-        try:
-            self.close()
-        except:
-            pass
-
         check_websocket, websocket_reason = self.start_websocket()
 
         if not check_websocket:
             return check_websocket, websocket_reason
 
-        self.timesync.server_timestamps = None
+        self.time_sync.server_timestamps = None
         while True:
             try:
-                if self.timesync.server_timestamps is not None:
+                if self.time_sync.server_timestamps is not None:
                     break
             except:
                 pass
         return True, None
 
-    def close(self):
-        self.websocket.close()
+    async def close(self, error=None):
+        await self.websocket.on_close(error)
         self.websocket_thread.join()
 
     def websocket_alive(self):
@@ -269,6 +269,30 @@ class PocketOptionAPI(object):  # pylint: disable=too-many-instance-attributes
         """Property for get IQ Option websocket candles chanel.
 
         :returns: The instance of :class:`GetCandles
-            <iqoptionapi.ws.chanels.candles.GetCandles>`.
+            <pocketoptionapi.ws.channels.candles.GetCandles>`.
         """
         return GetCandles(self)
+
+    @property
+    def change_symbol(self):
+        """Property for get Pocket Option websocket change_symbol chanel.
+
+        :returns: The instance of :class:`ChangeSymbol
+            <iqoptionapi.ws.channels.change_symbol.ChangeSymbol>`.
+        """
+        return ChangeSymbol(self)
+
+    @property
+    def synced_datetime(self):
+        try:
+            if self.time_sync is not None:
+                self.sync.synchronize(self.time_sync.server_timestamp)
+                self.sync_datetime = self.sync.get_synced_datetime()
+            else:
+                logging.error("timesync no está establecido")
+                self.sync_datetime = None
+        except Exception as e:
+            logging.error(e)
+            self.sync_datetime = None
+
+        return self.sync_datetime
