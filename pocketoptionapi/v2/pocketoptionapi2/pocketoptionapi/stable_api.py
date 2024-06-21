@@ -1,15 +1,15 @@
 # dev @vigo_walker, github: https://github.com/theshadow76
 
 # python
-from pocketoptionapi.api import pocketoptionapi
-import pocketoptionapi.constants as OP_code
-import pocketoptionapi.country_id as Country
+from pocketoptionapi.v2.pocketoptionapi2.pocketoptionapi.api import pocketoptionapi
+import pocketoptionapi.v2.pocketoptionapi2.pocketoptionapi.constants as OP_code
+import pocketoptionapi.v2.pocketoptionapi2.pocketoptionapi.country_id as Country
 import threading
 import time
 import logging
 import operator
-import pocketoptionapi.global_value as global_value
-from pocketoptionapi.expiration import get_expiration_time, get_remaning_time
+import pocketoptionapi.v2.pocketoptionapi2.pocketoptionapi.global_value as global_value
+from pocketoptionapi.v2.pocketoptionapi2.pocketoptionapi.expiration import get_expiration_time, get_remaning_time
 from datetime import datetime, timedelta,timezone
 from collections import defaultdict
 from collections import deque
