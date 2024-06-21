@@ -1,6 +1,0 @@
-*.py[cod]
-build/
-dist/
-*.egg-info/
-.vscode/
-/.vs

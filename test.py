@@ -1,15 +1,31 @@
 import random
 import time
-import asyncio
-import os
-import time
-from pocketoptionapi.v2.pocketoptionapi2.pocketoptionapi.stable_api import PocketOption
-# dotenv.load_dotenv()
-SSID=r"""42["auth",{"session":"a:4:{s:10:\"session_id\";s:32:\"0641660deb66bacfe493ee595ad5bcd6\";s:10:\"ip_address\";s:12:\"190.162.4.33\";s:10:\"user_agent\";s:120:\"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36 OPR/107.\";s:13:\"last_activity\";i:1715088712;}bf42446033b557288d0399ac1527842c","isDemo":0,"uid":27658142,"platform":2}]"""
+
+from pocketoptionapi.stable_api import PocketOption
+
+ssid = (r'')
+api = PocketOption(ssid)
 
 
-api = PocketOption()
+def direction():
+    # Selecciona aleatoriamente entre 'call' y 'put'
+    return random.choice(['call', 'put'])
 
-api.connect()
 
-print(api.get_balance())
+if __name__ == "__main__":
+    api.connect()
+    time.sleep(2)
+
+    print(api.check_connect(), "check connect")
+
+    data_candles = api.get_candles("AUDNZD_otc", 60, time.time(), count_request=1)
+
+    data, diff = api.process_candle(data_candles, 60)
+    print(data)
+    print(diff)
+    data.to_csv('datos_AUDNZD_otc_test.csv', index=False)
+    while api.check_connect():
+        print(api.get_server_timestamp(), "server datetime")
+        time.sleep(1)
+
+    # Cierra la conexión con la API

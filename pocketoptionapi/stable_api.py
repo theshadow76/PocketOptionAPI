@@ -16,8 +16,6 @@ from collections import defaultdict
 from collections import deque
 # from pocketoptionapi.expiration import get_expiration_time, get_remaning_time
 import pandas as pd
-from pocketoptionapi.ws.chanels.get_balances import *
-from pocketoptionapi.ws.client import WebsocketClient
 
 # Obtener la zona horaria local del sistema como una cadena en el formato IANA
 local_zone_name = get_localzone()
@@ -36,7 +34,7 @@ def get_balance():
 
 
 class PocketOption:
-    __version__ = "6.8.9.1"
+    __version__ = "1.0.0"
 
     def __init__(self, ssid):
         self.size = [1, 5, 10, 15, 30, 60, 120, 300, 600, 900, 1800,
@@ -67,10 +65,10 @@ class PocketOption:
     # --------------------------------------------------------------------------
 
     def get_server_timestamp(self):
-        return self.api.timesync.server_timestamp
+        return self.api.time_sync.server_timestamp
 
     def get_server_datetime(self):
-        return self.api.timesync.server_datetime
+        return self.api.time_sync.server_datetime
 
     def set_session(self, header, cookie):
         self.SESSION_HEADER = header
@@ -104,8 +102,6 @@ class PocketOption:
             return False
         return True
 
-    async def reconect(self):
-        await WebsocketClient(self).reconnect()
     @staticmethod
     def check_connect():
         # True/False
@@ -119,46 +115,74 @@ class PocketOption:
         # wait for timestamp getting
 
     # self.update_ACTIVES_OPCODE()
-    def get_balance(self):
+    @staticmethod
+    def get_balance():
         if global_value.balance_updated:
             return global_value.balance
         else:
             return None
 
-    def buy(self, amount, ACTIVES, ACTION, expirations):
+    def buy(self, amount, active, action, expirations):
         self.api.buy_multi_option = {}
         self.api.buy_successful = None
         req_id = "buy"
+
         try:
-            self.api.buy_multi_option[req_id]["id"] = None
-        except:
-            pass
+            if req_id not in self.api.buy_multi_option:
+                self.api.buy_multi_option[req_id] = {"id": None}
+            else:
+                self.api.buy_multi_option[req_id]["id"] = None
+        except Exception as e:
+            logging.error(f"Error initializing buy_multi_option: {e}")
+            return False, None
+
         global_value.order_data = None
         global_value.result = None
-        self.api.buyv3(
-            amount, ACTIVES, ACTION, expirations, req_id)
-        start_t = time.time()
-        while global_value.result is None or global_value.order_data is None:
-            if time.time() - start_t >= 5:
-                logging.error(global_value.order_data["error"])
-                return False, None
 
-        return global_value.result, global_value.order_data["id"]
+        self.api.buyv3(amount, active, action, expirations, req_id)
+
+        start_t = time.time()
+        while True:
+            if global_value.result is not None and global_value.order_data is not None:
+                break
+            if time.time() - start_t >= 5:
+                if isinstance(global_value.order_data, dict) and "error" in global_value.order_data:
+                    logging.error(global_value.order_data["error"])
+                else:
+                    logging.error("Unknown error occurred during buy operation")
+                return False, None
+            time.sleep(0.1)  # Sleep for a short period to prevent busy-waiting
+
+        return global_value.result, global_value.order_data.get("id", None)
 
     def check_win(self, id_number):
         """Return amount of deals and win/lose status."""
 
+        start_t = time.time()
+        order_info = None
+
         while True:
             try:
                 order_info = self.get_async_order(id_number)
-                if order_info["id"] is not None:
+                if order_info and "id" in order_info and order_info["id"] is not None:
                     break
             except:
                 pass
+            # except Exception as e:
+            #    logging.error(f"Error retrieving order info: {e}")
 
-            # Determina el estado de win/lose basado en el profit.
-        status = "win" if order_info["profit"] > 0 else "lose"
-        return order_info["profit"], status
+            if time.time() - start_t >= 120:
+                logging.error("Timeout: Could not retrieve order info in time.")
+                return None, "unknown"
+
+            time.sleep(0.1)  # Sleep for a short period to prevent busy-waiting
+
+        if order_info and "profit" in order_info:
+            status = "win" if order_info["profit"] > 0 else "lose"
+            return order_info["profit"], status
+        else:
+            logging.error("Invalid order info retrieved.")
+            return None, "unknown"
 
     @staticmethod
     def last_time(timestamp, period):
@@ -167,48 +191,73 @@ class PocketOption:
         timestamp_redondeado = (timestamp // period) * period
         return int(timestamp_redondeado)
 
-    def get_candles(self, ACTIVES, period, end_time, count=9000, count_request=1):
+    def get_candles(self, active, period, start_time=None, count=6000, count_request=1):
         """
         Realiza múltiples peticiones para obtener datos históricos de velas y los procesa.
         Devuelve un Dataframe ordenado de menor a mayor por la columna 'time'.
 
-        :param ACTIVES: El activo para el cual obtener las velas.
+        :param active: El activo para el cual obtener las velas.
         :param period: El intervalo de tiempo de cada vela en segundos.
-        :param count: El número de segundos a obtener en cada petición, max: 9000 = 150 datos.
-        :param end_time: El tiempo final para la última vela.
+        :param count: El número de segundos a obtener en cada petición, max: 9000 = 150 datos de 1 min.
+        :param start_time: El tiempo final para la última vela.
         :param count_request: El número de peticiones para obtener más datos históricos.
         """
+        if start_time is None:
+            time_sync = self.get_server_timestamp()
+            time_red = self.last_time(time_sync, period)
+        else:
+            time_red = start_time
+            time_sync = self.get_server_timestamp()
 
-        time_sync = self.get_server_timestamp() - period
-        time_red = self.last_time(time_sync, period)
-        print(time_red)
-        data_temp = []
-        self.api.candles = data_temp
+        all_candles = []
 
-        if self.api.historyNew is not None:
-            data_temp.extend(self.process_data_history(self.api.historyNew, period))
-
-        for i in range(count_request):
+        for _ in range(count_request):
             self.api.history_data = None
+
             while True:
                 try:
-                    self.api.getcandles(ACTIVES, period, count, time_red)
+                    # Enviar la petición de velas
+                    self.api.getcandles(active, 30, count, time_red)
+
+                    # Esperar hasta que history_data no sea None
                     while self.check_connect and self.api.history_data is None:
-                        pass
+                        time.sleep(0.1)
+
                     if self.api.history_data is not None:
-                        data_temp.extend(self.api.history_data)
+                        all_candles.extend(self.api.history_data)
                         break
 
-                except:
-                    logging.error('**error** get_candles need reconnect')
-                    # self.connect()
+                except Exception as e:
+                    logging.error(e)
+                    # Puedes agregar lógica de reconexión aquí si es necesario
 
-            # Ajusta el tiempo de inicio para la próxima petición
-            time_red -= count
+            # Ordenar all_candles por 'index' para asegurar que estén en el orden correcto
+            all_candles = sorted(all_candles, key=lambda x: x["time"])
 
-        return self.api.candles
+            # Asegurarse de que se han recibido velas antes de actualizar time_red
+            if all_candles:
+                # Usar el tiempo de la última vela recibida para la próxima petición
+                time_red = all_candles[0]["time"]
 
-    def process_data_history(self, data, period):
+        # Crear un DataFrame con todas las velas obtenidas
+        df_candles = pd.DataFrame(all_candles)
+
+        # Ordenar por la columna 'time' de menor a mayor
+        df_candles = df_candles.sort_values(by='time').reset_index(drop=True)
+        df_candles['time'] = pd.to_datetime(df_candles['time'], unit='s')
+        df_candles.set_index('time', inplace=True)
+        df_candles.index = df_candles.index.floor('1s')
+
+        # Resamplear los datos en intervalos de 30 segundos y calcular open, high, low, close
+        df_resampled = df_candles['price'].resample(f'{period}s').ohlc()
+
+        # Resetear el índice para que 'time' vuelva a ser una columna
+        df_resampled.reset_index(inplace=True)
+
+        return df_resampled
+
+    @staticmethod
+    def process_data_history(data, period):
         """
         Este método toma datos históricos, los convierte en un DataFrame de pandas, redondea los tiempos al minuto más cercano,
         y calcula los valores OHLC (Open, High, Low, Close) para cada minuto. Luego, convierte el resultado en un diccionario
@@ -222,8 +271,8 @@ class PocketOption:
         df = pd.DataFrame(data['history'], columns=['timestamp', 'price'])
         # Convertir a datetime y redondear al minuto
         df['datetime'] = pd.to_datetime(df['timestamp'], unit='s', utc=True)
-        df['datetime'] = df['datetime'].dt.tz_convert(str(local_zone_name))
-        df['minute_rounded'] = df['datetime'].dt.floor(f'{period/60}T')
+        # df['datetime'] = df['datetime'].dt.tz_convert(str(local_zone_name))
+        df['minute_rounded'] = df['datetime'].dt.floor(f'{period / 60}min')
 
         # Calcular OHLC
         ohlcv = df.groupby('minute_rounded').agg(
@@ -235,6 +284,8 @@ class PocketOption:
 
         ohlcv['time'] = ohlcv['minute_rounded'].apply(lambda x: int(x.timestamp()))
         ohlcv = ohlcv.drop(columns='minute_rounded')
+
+        ohlcv = ohlcv.iloc[:-1]
 
         ohlcv_dict = ohlcv.to_dict(orient='records')
 
@@ -265,10 +316,15 @@ class PocketOption:
         data_df.sort_values(by='time', ascending=True, inplace=True)
         data_df.drop_duplicates(subset='time', keep="first", inplace=True)
         data_df.reset_index(drop=True, inplace=True)
-        data_df.fillna(method='ffill', inplace=True)
+        data_df.ffill(inplace=True)
         data_df.drop(columns='symbol_id', inplace=True)
         # Verificación opcional: Comprueba si las diferencias son todas de 60 segundos (excepto el primer valor NaN)
         diferencias = data_df['time'].diff()
         diff = (diferencias[1:] == period).all()
         return data_df, diff
 
+    def change_symbol(self, active, period):
+        return self.api.change_symbol(active, period)
+
+    def sync_datetime(self):
+        return self.api.synced_datetime
