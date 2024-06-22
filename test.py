@@ -12,7 +12,6 @@ ssid = (r'42["auth",{"session":"vtftn12e6f5f5008moitsd6skl","isDemo":1,"uid":276
 print(ssid)
 api = PocketOption(ssid)
 
-
 if __name__ == "__main__":
     api.connect()
     time.sleep(5)
