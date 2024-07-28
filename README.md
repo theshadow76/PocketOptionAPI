@@ -1,6 +1,6 @@
 # Pocket Option API
 
-# check our bots and talk to us!
+## check our bots and talk to us!
 https://discord.com/invite/kaZ8uV9b6k
 
 
