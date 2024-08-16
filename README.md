@@ -1,6 +1,7 @@
 # Pocket Option API
 
 ## check our bots and talk to us!
+also, you need to check this for the latest version, don't worry, its free :)
 https://discord.com/invite/kaZ8uV9b6k
 
 
