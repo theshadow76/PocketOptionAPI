@@ -1,9 +1,9 @@
 # This is a sample Python script.
 import asyncio
 import threading
-
+import sys
 from tzlocal import get_localzone
-
+import json
 from pocketoptionapi.api import PocketOptionAPI
 import pocketoptionapi.constants as OP_code
 # import pocketoptionapi.country_id as Country
@@ -36,10 +36,11 @@ def get_balance():
 class PocketOption:
     __version__ = "1.0.0"
 
-    def __init__(self, ssid):
+    def __init__(self, ssid,demo):
         self.size = [1, 5, 10, 15, 30, 60, 120, 300, 600, 900, 1800,
                      3600, 7200, 14400, 28800, 43200, 86400, 604800, 2592000]
         global_value.SSID = ssid
+        global_value.DEMO = demo
         self.suspend = 0.5
         self.thread = None
         self.subscribe_candle = []
@@ -66,6 +67,8 @@ class PocketOption:
 
     def get_server_timestamp(self):
         return self.api.time_sync.server_timestamp
+    def Stop(self):
+        sys.exit()
 
     def get_server_datetime(self):
         return self.api.time_sync.server_datetime
@@ -86,6 +89,34 @@ class PocketOption:
 
     def start_async(self):
         asyncio.run(self.api.connect())
+    def disconnect(self):
+        """Gracefully close the WebSocket connection and clean up."""
+        try:
+            # Close the WebSocket connection
+            if global_value.websocket_is_connected:
+                asyncio.run(self.api.close())  # Use the close method from the PocketOptionAPI class
+                print("WebSocket connection closed successfully.")
+            else:
+                print("WebSocket was not connected.")
+
+            # Cancel any running asyncio tasks
+            if self.loop is not None:
+                for task in asyncio.all_tasks(self.loop):
+                    task.cancel()
+
+                # If you were using a custom event loop, stop and close it
+                if not self.loop.is_closed():
+                    self.loop.stop()
+                    self.loop.close()
+                    print("Event loop stopped and closed successfully.")
+
+            # Clean up the WebSocket thread if it's still running
+            if self.api.websocket_thread is not None and self.api.websocket_thread.is_alive():
+                self.api.websocket_thread.join()
+                print("WebSocket thread joined successfully.")
+
+        except Exception as e:
+            print(f"Error during disconnect: {e}")
 
     def connect(self):
         """
@@ -101,6 +132,16 @@ class PocketOption:
             print(f"Error al conectar: {e}")
             return False
         return True
+    
+    def GetPayout(self, pair):
+        data = self.api.GetPayoutData()
+        data = json.loads(data)
+        data2 = None
+        for i in data:
+            if i[1] == pair:
+                data2 = i
+
+        return data2[5]
 
     @staticmethod
     def check_connect():
@@ -121,7 +162,24 @@ class PocketOption:
             return global_value.balance
         else:
             return None
+    @staticmethod
+    def check_open():
+        #print(global_value.order_open)
+        return global_value.order_open
+    @staticmethod
+    def check_order_closed(ido):
+        
+        while ido not in global_value.order_closed :
+            time.sleep(0.1)
 
+        for pack in global_value.stat :
+            if pack[0] == ido :
+               print('Order Closed',pack[1])
+
+        #print(global_value.order_closed)
+        return pack[0]
+    
+    
     def buy(self, amount, active, action, expirations):
         self.api.buy_multi_option = {}
         self.api.buy_successful = None
@@ -138,6 +196,8 @@ class PocketOption:
 
         global_value.order_data = None
         global_value.result = None
+
+        
 
         self.api.buyv3(amount, active, action, expirations, req_id)
 
@@ -202,59 +262,77 @@ class PocketOption:
         :param start_time: El tiempo final para la última vela.
         :param count_request: El número de peticiones para obtener más datos históricos.
         """
-        if start_time is None:
-            time_sync = self.get_server_timestamp()
-            time_red = self.last_time(time_sync, period)
-        else:
-            time_red = start_time
-            time_sync = self.get_server_timestamp()
+        try:
+            print("In try")
+            if start_time is None:
+                time_sync = self.get_server_timestamp()
+                time_red = self.last_time(time_sync, period)
+            else:
+                time_red = start_time
+                time_sync = self.get_server_timestamp()
 
-        all_candles = []
+            all_candles = []
 
-        for _ in range(count_request):
-            self.api.history_data = None
+            for _ in range(count_request):
+                self.api.history_data = None
+                print("In FOr Loop")
 
-            while True:
-                try:
-                    # Enviar la petición de velas
-                    self.api.getcandles(active, 30, count, time_red)
+                while True:
+                    logging.info("Entered WHileloop in GetCandles")
+                    print("In WHile loop")
+                    try:
+                        # Enviar la petición de velas
+                        print("Before get candles")
+                        self.api.getcandles(active, 30, count, time_red)
+                        print("AFter get candles")
 
-                    # Esperar hasta que history_data no sea None
-                    while self.check_connect and self.api.history_data is None:
-                        time.sleep(0.1)
+                        # Esperar hasta que history_data no sea None
+                        for i in range(1, 100):
+                            if self.api.history_data is None:
+                                print(f"SLeeping, attempt: {i} / 100")
+                                time.sleep(0.1)
+                            if i == 99:
+                                break
 
-                    if self.api.history_data is not None:
-                        all_candles.extend(self.api.history_data)
-                        break
+                        if self.api.history_data is not None:
+                            print("In break")
+                            all_candles.extend(self.api.history_data)
+                            break
 
-                except Exception as e:
-                    logging.error(e)
-                    # Puedes agregar lógica de reconexión aquí si es necesario
+                    except Exception as e:
+                        logging.error(e)
+                        # Puedes agregar lógica de reconexión aquí si es necesario
+                        #self.api.connect()
 
-            # Ordenar all_candles por 'index' para asegurar que estén en el orden correcto
-            all_candles = sorted(all_candles, key=lambda x: x["time"])
+                # Ordenar all_candles por 'index' para asegurar que estén en el orden correcto
+                all_candles = sorted(all_candles, key=lambda x: x["time"])
 
-            # Asegurarse de que se han recibido velas antes de actualizar time_red
-            if all_candles:
-                # Usar el tiempo de la última vela recibida para la próxima petición
-                time_red = all_candles[0]["time"]
+                # Asegurarse de que se han recibido velas antes de actualizar time_red
+                if all_candles:
+                    # Usar el tiempo de la última vela recibida para la próxima petición
+                    time_red = all_candles[0]["time"]
 
-        # Crear un DataFrame con todas las velas obtenidas
-        df_candles = pd.DataFrame(all_candles)
+            # Crear un DataFrame con todas las velas obtenidas
+            df_candles = pd.DataFrame(all_candles)
 
-        # Ordenar por la columna 'time' de menor a mayor
-        df_candles = df_candles.sort_values(by='time').reset_index(drop=True)
-        df_candles['time'] = pd.to_datetime(df_candles['time'], unit='s')
-        df_candles.set_index('time', inplace=True)
-        df_candles.index = df_candles.index.floor('1s')
+            # Ordenar por la columna 'time' de menor a mayor
+            df_candles = df_candles.sort_values(by='time').reset_index(drop=True)
+            df_candles['time'] = pd.to_datetime(df_candles['time'], unit='s')
+            df_candles.set_index('time', inplace=True)
+            df_candles.index = df_candles.index.floor('1s')
 
-        # Resamplear los datos en intervalos de 30 segundos y calcular open, high, low, close
-        df_resampled = df_candles['price'].resample(f'{period}s').ohlc()
+            # Resamplear los datos en intervalos de 30 segundos y calcular open, high, low, close
+            df_resampled = df_candles['price'].resample(f'{period}s').ohlc()
 
-        # Resetear el índice para que 'time' vuelva a ser una columna
-        df_resampled.reset_index(inplace=True)
+            # Resetear el índice para que 'time' vuelva a ser una columna
+            df_resampled.reset_index(inplace=True)
 
-        return df_resampled
+            print("FINISHED!!!")
+
+            return df_resampled
+        except:
+            print("In except")
+            return None
 
     @staticmethod
     def process_data_history(data, period):
@@ -317,7 +395,7 @@ class PocketOption:
         data_df.drop_duplicates(subset='time', keep="first", inplace=True)
         data_df.reset_index(drop=True, inplace=True)
         data_df.ffill(inplace=True)
-        data_df.drop(columns='symbol_id', inplace=True)
+        #data_df.drop(columns='symbol_id', inplace=True)
         # Verificación opcional: Comprueba si las diferencias son todas de 60 segundos (excepto el primer valor NaN)
         diferencias = data_df['time'].diff()
         diff = (diferencias[1:] == period).all()

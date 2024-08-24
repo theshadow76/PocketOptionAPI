@@ -17,3 +17,7 @@ balance_type = None
 balance_updated = None
 result = None
 order_data = {}
+order_open = []
+order_closed = []
+stat = []
+DEMO = None
