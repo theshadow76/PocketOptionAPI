@@ -2,18 +2,20 @@ import websockets
 import anyio
 from rich.pretty import pprint as print
 import json
+from pocketoptionapi.constants import REGION
 
-SESSION = r'42["auth",{"session":"a:4:{s:10:\"session_id\";s:32:\"da7a5a82c8f6c35a87b2ee31d4f5b3b4\";s:10:\"ip_address\";s:10:\"90.36.9.15\";s:10:\"user_agent\";s:120:\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36 OP\";s:13:\"last_activity\";i:1707667599;}3a0058a58a6df5e7b49f652f8e4f8249","isDemo":1,"uid":27658142,"platform":1}]'
+SESSION = r'42["auth",{"session":"a:4:{s:10:\"session_id\";s:32:\"a1dc009a7f1f0c8267d940d0a036156f\";s:10:\"ip_address\";s:12:\"190.162.4.33\";s:10:\"user_agent\";s:120:\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 OP\";s:13:\"last_activity\";i:1709914958;}793884e7bccc89ec798c06ef1279fcf2","isDemo":0,"uid":27658142,"platform":1}]'
 
 
 async def websocket_client(url, pro):
-    while True:
+    for i in REGION.get_regions(REGION):
+        print(f"Trying {i}...")
         try:
             async with websockets.connect(
-                url,
+                i, #teoria de los issues
                 extra_headers={
-                    "Origin": "https://pocket-link19.co",
-                    # "Origin": "https://po.trade/"
+                    #"Origin": "https://pocket-link19.co",
+                    "Origin": "https://po.trade/"
                 },
             ) as websocket:
                 async for message in websocket:
@@ -23,7 +25,7 @@ async def websocket_client(url, pro):
         except Exception as e:
             print(e)
             print("Connection lost... reconnecting")
-            await anyio.sleep(5)
+            # await anyio.sleep(5)
     return True
 
 
