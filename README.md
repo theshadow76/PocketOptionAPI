@@ -1,4 +1,5 @@
 # Pocket Option API
+for the latest api, check here: https://github.com/theshadow76/BinaryOptionsTools
 
 ## check our bots and talk to us!
 also, you need to check this for the latest version, don't worry, its free :)
