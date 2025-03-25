@@ -3,8 +3,7 @@ Check BinaryOptionToolsv2: [https://github.com/ChipaDevTeam/BinaryOptionsTools-v
 for the latest api, check here: [https://github.com/ChipaDevTeam/BinaryOptionsToolsV1](https://github.com/ChipaDevTeam/BinaryOptionsToolsV1)
 
 ## check our bots and talk to us!
-also, you need to check this for the latest version, don't worry, its free :)
-https://discord.com/invite/kaZ8uV9b6k
+Join our comunity --> [discord](https://discord.com/invite/kaZ8uV9b6k)
 
 
 In development!
