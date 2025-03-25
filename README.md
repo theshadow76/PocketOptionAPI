@@ -1,5 +1,5 @@
 # Pocket Option API
-Check BinaryOptionToolsv2: [https://github.com/ChipaDevTeam/BinaryOptionsTools-v2](https://github.com/ChipaDevTeam/BinaryOptionsTools-v2)
+Check BinaryOptionToolsv2: [https://github.com/ChipaDevTeam/BinaryOptionsTools-v2](https://github.com/ChipaDevTeam/BinaryOptionsTools-v2) <br>
 for the latest api, check here: [https://github.com/ChipaDevTeam/BinaryOptionsToolsV1](https://github.com/ChipaDevTeam/BinaryOptionsToolsV1)
 
 ## check our bots and talk to us!
